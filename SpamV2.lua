@@ -1,7 +1,7 @@
 local g = Instance.new
 local S = g("ScreenGui", game.CoreGui)
 local F = g("Frame", S)
-F.Size = UDim2.new(0, 280, 0, 250)
+F.Size = UDim2.new(0, 280, 0, 280)
 F.Position = UDim2.new(0.5, -140, 0.4, 0)
 F.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 F.Active = true
@@ -17,7 +17,7 @@ L.BackgroundTransparency = 1
 L.TextScaled = true
 L.TextXAlignment = Enum.TextXAlignment.Left
 
--- Подпись "Код"
+-- Код
 local LT = g("TextLabel", F)
 LT.Size = UDim2.new(0, 90, 0, 20)
 LT.Position = UDim2.new(0, 10, 0, 30)
@@ -92,6 +92,14 @@ SpamButton.Text = "Начать спам"
 SpamButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 SpamButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 
+-- Кнопка "Clear"
+local ClearButton = g("TextButton", F)
+ClearButton.Size = UDim2.new(1, -40, 0, 30)
+ClearButton.Position = UDim2.new(0, 10, 0, 240)
+ClearButton.Text = "Clear"
+ClearButton.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+ClearButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+
 -- Закрытие
 local X = g("TextButton", F)
 X.Size = UDim2.new(0, 30, 0, 30)
@@ -104,15 +112,19 @@ X.AutoButtonColor = true
 
 local Spamming = false
 
--- Однократное выполнение
-EnterButton.MouseButton1Click:Connect(function()
-    local code = T.Text
+-- Функция для выполнения команды
+local function ExecuteCommand(code)
     if code == "" then return end
     local success, err = pcall(function()
-        local func = loadstring("return function() "..code.." end")()
-        func()
+        -- Прямое выполнение кода
+        loadstring(code)()
     end)
-    if not success then warn("Ошибка в коде: "..err) end
+    if not success then warn("Ошибка: "..err) end
+end
+
+-- Ввод один раз
+EnterButton.MouseButton1Click:Connect(function()
+    ExecuteCommand(T.Text)
 end)
 
 -- Спам
@@ -122,22 +134,18 @@ SpamButton.MouseButton1Click:Connect(function()
         SpamButton.Text = "Начать спам"
         return
     end
-
-    local code = T.Text
+local code = T.Text
     local delayTime = tonumber(I.Text) or 0.1
     local countNum = tonumber(C.Text) or 1
     if code == "" then return end
 
     Spamming = true
     SpamButton.Text = "Остановить спам"
-        task.spawn(function()
+
+    task.spawn(function()
         for i = 1, countNum do
             if not Spamming then break end
-            local success, err = pcall(function()
-                local func = loadstring("return function() "..code.." end")()
-                func()
-            end)
-            if not success then warn("Ошибка в коде: "..err) end
+            ExecuteCommand(code)
             task.wait(delayTime)
         end
         Spamming = false
@@ -145,6 +153,12 @@ SpamButton.MouseButton1Click:Connect(function()
     end)
 end)
 
+-- Очистка TextBox
+ClearButton.MouseButton1Click:Connect(function()
+    T.Text = ""
+end)
+
+-- Закрытие
 X.MouseButton1Click:Connect(function()
     Spamming = false
     F:Destroy()
